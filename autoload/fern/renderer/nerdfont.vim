@@ -147,12 +147,28 @@ try
     return nerdfont#find(a:bufname, a:isdir) . g:fern#renderer#nerdfont#padding
   endfunction
 catch /^Vim\%((\a\+)\)\=:E117:/
-  function! s:find(bufname, isdir) abort
-    return a:isdir is# 0 ? '|  ' : a:isdir ==# 'open' ? '|- ' : '|+ '
-  endfunction
-  call fern#logger#error(
-        \ 'nerdfont.vim is not installed. fern-renderer-nerdfont.vim requires nerdfont.vim',
-        \)
+  try
+    call WebDevIconsGetFileTypeSymbol('')
+    function! s:find(bufname, isdir) abort
+      if a:isdir is# 0
+        return WebDevIconsGetFileTypeSymbol(a:bufname, a:isdir) . g:fern#renderer#nerdfont#padding
+      endif
+      if a:isdir is# 'open'
+        let l:dir = substitute(a:bufname, '^fern:///file://', '', '')
+        let l:dir = substitute(l:dir, '\$', '', '')
+      else
+        let l:dir = ''
+      endif
+      return WebDevIconsGetFileTypeSymbol(l:dir, 1) . g:fern#renderer#nerdfont#padding
+    endfunction
+  catch /^Vim\%((\a\+)\)\=:E117:/
+    function! s:find(bufname, isdir) abort
+      return a:isdir is# 0 ? '|  ' : a:isdir ==# 'open' ? '|- ' : '|+ '
+    endfunction
+    call fern#logger#error(
+          \ 'nerdfont.vim or SupraIcons is not installed. vim-fern-renderer-nerdfont requires either nerdfont.vim or SupraIcons',
+          \ )
+  endtry
 endtry
 
 call s:Config.config(expand('<sfile>:p'), {
